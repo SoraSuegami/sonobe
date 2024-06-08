@@ -4,6 +4,7 @@ use ark_r1cs_std::fields::fp::FpVar;
 use ark_relations::r1cs::{ConstraintSystemRef, SynthesisError};
 use ark_std::fmt::Debug;
 
+#[cfg(not(target_arch = "wasm32"))]
 pub mod circom;
 
 /// FCircuit defines the trait of the circuit of the F function, which is the one being folded (ie.
@@ -30,7 +31,7 @@ pub trait FCircuit<F: PrimeField>: Clone + Debug {
         // this method uses self, so that each FCircuit implementation (and different frontends)
         // can hold a state if needed to store data to compute the next state.
         &self,
-        i: usize,
+        i: u64,
         z_i: Vec<F>,
         external_inputs: Vec<F>, // inputs that are not part of the state
     ) -> Result<Vec<F>, Error>;
@@ -41,7 +42,7 @@ pub trait FCircuit<F: PrimeField>: Clone + Debug {
         // can hold a state if needed to store data to generate the constraints.
         &self,
         cs: ConstraintSystemRef<F>,
-        i: usize,
+        i: u64,
         z_i: Vec<FpVar<F>>,
         external_inputs: Vec<FpVar<F>>, // inputs that are not part of the state
     ) -> Result<Vec<FpVar<F>>, SynthesisError>;

@@ -16,7 +16,7 @@ use std::{fmt, usize};
 pub mod utils;
 use utils::CircomWrapper;
 
-type ClosurePointer<F> = Rc<dyn Fn(usize, Vec<F>, Vec<F>) -> Result<Vec<F>, Error>>;
+type ClosurePointer<F> = Rc<dyn Fn(u64, Vec<F>, Vec<F>) -> Result<Vec<F>, Error>>;
 
 #[derive(Clone)]
 struct CustomStepNative<F: PrimeField> {
@@ -50,7 +50,7 @@ impl<F: PrimeField> CircomFCircuit<F> {
 
     pub fn execute_custom_step_native(
         &self,
-        _i: usize,
+        _i: u64,
         z_i: Vec<F>,
         external_inputs: Vec<F>,
     ) -> Result<Vec<F>, Error> {
@@ -116,19 +116,14 @@ impl<F: PrimeField> FCircuit<F> for CircomFCircuit<F> {
         self.external_inputs_len
     }
 
-    fn step_native(
-        &self,
-        _i: usize,
-        z_i: Vec<F>,
-        external_inputs: Vec<F>,
-    ) -> Result<Vec<F>, Error> {
+    fn step_native(&self, _i: u64, z_i: Vec<F>, external_inputs: Vec<F>) -> Result<Vec<F>, Error> {
         self.execute_custom_step_native(_i, z_i, external_inputs)
     }
 
     fn generate_step_constraints(
         &self,
         cs: ConstraintSystemRef<F>,
-        _i: usize,
+        _i: u64,
         z_i: Vec<FpVar<F>>,
         external_inputs: Vec<FpVar<F>>,
     ) -> Result<Vec<FpVar<F>>, SynthesisError> {

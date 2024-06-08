@@ -1,16 +1,24 @@
+#[cfg(not(target_arch = "wasm32"))]
 use ::clap::Parser;
+#[cfg(not(target_arch = "wasm32"))]
 use ark_serialize::Write;
+#[cfg(not(target_arch = "wasm32"))]
 use settings::Cli;
+#[cfg(not(target_arch = "wasm32"))]
 use std::path::Path;
+#[cfg(not(target_arch = "wasm32"))]
 use std::{fs, io};
 
+#[cfg(not(target_arch = "wasm32"))]
 mod settings;
 
+#[cfg(not(target_arch = "wasm32"))]
 fn create_or_open_then_write<T: AsRef<[u8]>>(path: &Path, content: &T) -> Result<(), io::Error> {
     let mut file = fs::OpenOptions::new().create(true).write(true).open(path)?;
     file.write_all(content.as_ref())
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 fn main() {
     let cli = Cli::parse();
 
@@ -34,3 +42,6 @@ fn main() {
     )
     .unwrap();
 }
+
+#[cfg(target_arch = "wasm32")]
+fn main() {}

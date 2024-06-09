@@ -1,6 +1,10 @@
 use crate::frontend::FCircuit;
 use crate::frontend::FpVar::Var;
 use crate::Error;
+
+#[cfg(target_arch = "wasm32")]
+use ark_circom_wasm as ark_circom;
+
 use ark_circom::circom::{CircomCircuit, R1CS as CircomR1CS};
 use ark_ff::PrimeField;
 use ark_r1cs_std::alloc::AllocVar;
@@ -13,7 +17,9 @@ use std::path::PathBuf;
 use std::rc::Rc;
 use std::{fmt, usize};
 
+// #[cfg(not(target_arch = "wasm32"))]
 pub mod utils;
+// #[cfg(not(target_arch = "wasm32"))]
 use utils::CircomWrapper;
 
 type ClosurePointer<F> = Rc<dyn Fn(u64, Vec<F>, Vec<F>) -> Result<Vec<F>, Error>>;

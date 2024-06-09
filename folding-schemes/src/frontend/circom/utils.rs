@@ -1,3 +1,6 @@
+#[cfg(target_arch = "wasm32")]
+use ark_circom_wasm as ark_circom;
+
 use ark_circom::{
     circom::{r1cs_reader, R1CS},
     WitnessCalculator,

@@ -4,7 +4,6 @@ use ark_r1cs_std::fields::fp::FpVar;
 use ark_relations::r1cs::{ConstraintSystemRef, SynthesisError};
 use ark_std::fmt::Debug;
 
-#[cfg(not(target_arch = "wasm32"))]
 pub mod circom;
 
 /// FCircuit defines the trait of the circuit of the F function, which is the one being folded (ie.

@@ -39,6 +39,7 @@ ark-circom = { git = "https://github.com/arnaucube/circom-compat" }
 wasmer = { version = "=2.3.0", default-features = false, features = [
     "default",
 ] }
+
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 ark-circom-wasm = { package = "ark-circom", git = "https://github.com/arnaucube//circom-compat", default-features = false, features = [
     "circom-2",

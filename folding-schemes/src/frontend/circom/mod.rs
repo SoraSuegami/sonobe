@@ -76,7 +76,7 @@ impl<F: PrimeField> CircomFCircuit<F> {
                 .collect::<Vec<BigInt>>();
             let mut inputs_map = vec![("ivc_input".to_string(), inputs_bi)];
 
-            if self.external_inputs_len() > 0 {
+            if self.external_inputs_len > 0 {
                 let external_inputs_bi = external_inputs
                     .iter()
                     .map(|val| self.circom_wrapper.ark_primefield_to_num_bigint(*val))
@@ -93,19 +93,36 @@ impl<F: PrimeField> CircomFCircuit<F> {
                 })?;
 
             // Extracts the z_i1(next state) from the witness vector.
-            let z_i1 = witness[1..1 + self.state_len()].to_vec();
+            let z_i1 = witness[1..1 + self.state_len].to_vec();
             Ok(z_i1)
         }
     }
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 impl<F: PrimeField> FCircuit<F> for CircomFCircuit<F> {
     /// (r1cs_path, wasm_path, state_len, external_inputs_len)
+    #[cfg(not(target_arch = "wasm32"))]
     type Params = (PathBuf, PathBuf, usize, usize);
 
+    /// (r1cs_raw, wasm_bytes, state_len, external_inputs_len)
+    #[cfg(target_arch = "wasm32")]
+    type Params = (Vec<u8>, Vec<u8>, usize, usize);
+
     fn new(params: Self::Params) -> Result<Self, Error> {
-        let (r1cs_path, wasm_path, state_len, external_inputs_len) = params;
-        let circom_wrapper = CircomWrapper::from_files(r1cs_path, wasm_path)?;
+        let state_len = params.2;
+        let external_inputs_len = params.3;
+        #[cfg(not(target_arch = "wasm32"))]
+        let circom_wrapper = {
+            let (r1cs_path, wasm_path, _, _) = params;
+            CircomWrapper::from_files(r1cs_path, wasm_path)?
+        };
+        #[cfg(target_arch = "wasm32")]
+        let circom_wrapper = {
+            let (r1cs_raw, wasm_bytes, _, external_inputs_len) = params;
+            let r1cs_reader = BufReader::new(r1cs_raw.as_slice());
+            CircomWrapper::new(r1cs_reader, &wasm_bytes)?
+        };
 
         let r1cs = circom_wrapper.extract_r1cs()?;
         Ok(Self {

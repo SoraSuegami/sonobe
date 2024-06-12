@@ -1,6 +1,7 @@
 #[cfg(target_arch = "wasm32")]
 use ark_circom_wasm as ark_circom;
 
+use crate::Error;
 use ark_circom::{
     circom::{r1cs_reader, R1CS},
     WitnessCalculator,
@@ -8,40 +9,63 @@ use ark_circom::{
 use ark_ff::{BigInteger, PrimeField};
 use color_eyre::Result;
 use num_bigint::{BigInt, Sign};
-use std::{fs::File, io::BufReader, marker::PhantomData, path::PathBuf};
-
-use crate::Error;
+use std::{
+    fs::File,
+    io::{BufReader, Read, Seek},
+    marker::PhantomData,
+    path::PathBuf,
+};
+use wasmer::{Module, Store};
 
 // A struct that wraps Circom functionalities, allowing for extraction of R1CS and witnesses
 // based on file paths to Circom's .r1cs and .wasm.
 #[derive(Clone, Debug)]
 pub struct CircomWrapper<F: PrimeField> {
-    r1cs_filepath: PathBuf,
-    wasm_filepath: PathBuf,
-    _marker: PhantomData<F>,
+    // r1cs_reader: R,
+    // wasm_bytes: Vec<u8>,
+    pub r1cs: R1CS<F>,
+    pub calculator: WitnessCalculator,
+    _f: PhantomData<F>,
 }
 
 impl<F: PrimeField> CircomWrapper<F> {
     // Creates a new instance of the CircomWrapper with the file paths.
-    pub fn new(r1cs_filepath: PathBuf, wasm_filepath: PathBuf) -> Self {
-        CircomWrapper {
-            r1cs_filepath,
-            wasm_filepath,
-            _marker: PhantomData,
-        }
+    pub fn new<R: Read + Seek>(r1cs_reader: R, wasm_bytes: &[u8]) -> Result<Self, Error> {
+        let r1cs_file = r1cs_reader::R1CSFile::<F>::new(r1cs_reader)?;
+        let r1cs = r1cs_reader::R1CS::<F>::from(r1cs_file);
+        let store = Store::default();
+        let module = Module::new(&store, &wasm_bytes).map_err(|e| {
+            Error::WitnessCalculationError(format!("Failed to create Wasm module: {}", e))
+        })?;
+        let mut calculator = WitnessCalculator::from_module(module).map_err(|e| {
+            Error::WitnessCalculationError(format!("Failed to create WitnessCalculator: {}", e))
+        })?;
+        Ok(Self {
+            r1cs,
+            calculator,
+            _f: PhantomData,
+        })
     }
 
-    // Aggregated function to obtain R1CS and witness from Circom.
+    /// Creates a new instance of the CircomWrapper with the file paths.
+    pub fn from_files(r1cs_filepath: PathBuf, wasm_filepath: PathBuf) -> Result<Self, Error> {
+        let file = File::open(&r1cs_filepath)?;
+        let r1cs_reader = BufReader::new(file);
+        let wasm_bytes = std::fs::read(wasm_filepath)?;
+        Self::new(r1cs_reader, &wasm_bytes)
+    }
+
+    /// Aggregated function to obtain R1CS and witness from Circom.
     pub fn extract_r1cs_and_witness(
         &self,
         inputs: &[(String, Vec<BigInt>)],
     ) -> Result<(R1CS<F>, Option<Vec<F>>), Error> {
         // Extracts the R1CS
-        let file = File::open(&self.r1cs_filepath)?;
-        let reader = BufReader::new(file);
-        let r1cs_file = r1cs_reader::R1CSFile::<F>::new(reader)?;
-        let r1cs = r1cs_reader::R1CS::<F>::from(r1cs_file);
-
+        // let file = File::open(&self.r1cs_filepath)?;
+        // let reader = BufReader::new(file);
+        // let r1cs_file = r1cs_reader::R1CSFile::<F>::new(self.r1cs_reader)?;
+        // let r1cs = r1cs_reader::R1CS::<F>::from(r1cs_file);
+        let r1cs = self.r1cs.clone();
         // Extracts the witness vector
         let witness_vec = self.extract_witness(inputs)?;
 
@@ -49,10 +73,7 @@ impl<F: PrimeField> CircomWrapper<F> {
     }
 
     pub fn extract_r1cs(&self) -> Result<R1CS<F>, Error> {
-        let file = File::open(&self.r1cs_filepath)?;
-        let reader = BufReader::new(file);
-        let r1cs_file = r1cs_reader::R1CSFile::<F>::new(reader)?;
-        let mut r1cs = r1cs_reader::R1CS::<F>::from(r1cs_file);
+        let mut r1cs = self.r1cs.clone();
         r1cs.wire_mapping = None;
         Ok(r1cs)
     }
@@ -78,10 +99,8 @@ impl<F: PrimeField> CircomWrapper<F> {
         &self,
         inputs: &[(String, Vec<BigInt>)],
     ) -> Result<Vec<BigInt>, Error> {
-        let mut calculator = WitnessCalculator::new(&self.wasm_filepath).map_err(|e| {
-            Error::WitnessCalculationError(format!("Failed to create WitnessCalculator: {}", e))
-        })?;
-        calculator
+        self.calculator
+            .clone()
             .calculate_witness(inputs.iter().cloned(), true)
             .map_err(|e| {
                 Error::WitnessCalculationError(format!("Failed to calculate witness: {}", e))
@@ -143,8 +162,7 @@ mod tests {
             PathBuf::from("./src/frontend/circom/test_folder/cubic_circuit_js/cubic_circuit.wasm");
 
         let inputs = vec![("ivc_input".to_string(), vec![BigInt::from(3)])];
-        let wrapper = CircomWrapper::<Fr>::new(r1cs_path, wasm_path);
-
+        let wrapper = CircomWrapper::<Fr>::from_files(r1cs_path, wasm_path).unwrap();
         let (r1cs, witness) = wrapper.extract_r1cs_and_witness(&inputs).unwrap();
 
         let cs = ConstraintSystem::<Fr>::new_ref();

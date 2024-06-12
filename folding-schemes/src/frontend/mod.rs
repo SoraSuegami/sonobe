@@ -78,7 +78,7 @@ pub mod tests {
         }
         fn step_native(
             &self,
-            _i: usize,
+            _i: u64,
             z_i: Vec<F>,
             _external_inputs: Vec<F>,
         ) -> Result<Vec<F>, Error> {
@@ -87,7 +87,7 @@ pub mod tests {
         fn generate_step_constraints(
             &self,
             cs: ConstraintSystemRef<F>,
-            _i: usize,
+            _i: u64,
             z_i: Vec<FpVar<F>>,
             _external_inputs: Vec<FpVar<F>>,
         ) -> Result<Vec<FpVar<F>>, SynthesisError> {
@@ -122,7 +122,7 @@ pub mod tests {
         }
         fn step_native(
             &self,
-            _i: usize,
+            _i: u64,
             z_i: Vec<F>,
             _external_inputs: Vec<F>,
         ) -> Result<Vec<F>, Error> {
@@ -135,7 +135,7 @@ pub mod tests {
         fn generate_step_constraints(
             &self,
             cs: ConstraintSystemRef<F>,
-            _i: usize,
+            _i: u64,
             z_i: Vec<FpVar<F>>,
             _external_inputs: Vec<FpVar<F>>,
         ) -> Result<Vec<FpVar<F>>, SynthesisError> {

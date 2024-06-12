@@ -1,8 +1,9 @@
-use crate::frontend::FCircuit;
-use crate::frontend::FpVar::Var;
-use crate::Error;
+use folding_schemes::frontend::{circom::*, FCircuit};
 
-#[cfg(target_arch = "wasm32")]
+use folding_schemes::frontend::FCircuit;
+use folding_schemes::frontend::FpVar::Var;
+use folding_schemes::Error;
+
 use ark_circom_wasm as ark_circom;
 
 use ark_circom::circom::{CircomCircuit, R1CS as CircomR1CS};
@@ -107,7 +108,7 @@ impl<F: PrimeField> FCircuit<F> for CircomFCircuit<F> {
         let (r1cs_path, wasm_path, state_len, external_inputs_len) = params;
         let circom_wrapper = CircomWrapper::from_files(r1cs_path, wasm_path)?;
 
-        let r1cs = circom_wrapper.extract_r1cs()?;
+        let r1cs = circom_wrapper.r1cs.clone();
         Ok(Self {
             circom_wrapper,
             state_len,

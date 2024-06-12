@@ -1,5 +1,5 @@
 [workspace]
-members = ["folding-schemes", "solidity-verifiers", "cli"]
+members = ["folding-schemes", "solidity-verifiers", "cli", "wasm-prover"]
 resolver = "2"
 
 [patch.crates-io]

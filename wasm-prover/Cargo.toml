@@ -37,12 +37,14 @@ espresso_subroutines = { git = "https://github.com/EspressoSystems/hyperplonk", 
 getrandom = { version = "0.2", features = ["js"] }
 # # ark-circom = { git = "https://github.com/SoraSuegami/circom-compat.git" }
 folding-schemes = { path = "../folding-schemes" }
+rand = "0.8.5"
+
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wasm-bindgen = "0.2.92"
 
 [features]
-default = ["parallel"]
+default = ["parallel", "ark-bn254/r1cs", "ark-grumpkin/r1cs"]
 
 parallel = ["ark-std/parallel", "ark-ff/parallel", "ark-poly/parallel"]
 

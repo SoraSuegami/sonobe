@@ -14,11 +14,15 @@ use ark_poly::{
 use ark_poly_commit::kzg10::{
     Commitment as KZG10Commitment, Proof as KZG10Proof, VerifierKey, KZG10,
 };
+use ark_serialize::{
+    CanonicalDeserialize, CanonicalSerialize, Compress, SerializationError, Valid, Validate,
+};
 use ark_std::rand::RngCore;
 use ark_std::{borrow::Cow, fmt::Debug};
 use ark_std::{One, Zero};
 use core::marker::PhantomData;
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
+use std::io::Read;
 
 use super::CommitmentScheme;
 use crate::transcript::Transcript;
@@ -31,6 +35,42 @@ use crate::Error;
 pub struct ProverKey<'a, C: CurveGroup> {
     /// Group elements of the form `β^i G`, for different values of `i`.
     pub powers_of_g: Cow<'a, [C::Affine]>,
+}
+
+impl<'a, C: CurveGroup> CanonicalSerialize for ProverKey<'a, C> {
+    fn serialize_with_mode<W: std::io::prelude::Write>(
+        &self,
+        writer: W,
+        compress: ark_serialize::Compress,
+    ) -> Result<(), ark_serialize::SerializationError> {
+        self.powers_of_g.serialize_with_mode(writer, compress)
+    }
+
+    fn serialized_size(&self, compress: Compress) -> usize {
+        self.powers_of_g.serialized_size(compress)
+    }
+}
+
+impl<'a, C: CurveGroup> CanonicalDeserialize for ProverKey<'a, C> {
+    fn deserialize_with_mode<R: Read>(
+        reader: R,
+        compress: Compress,
+        validate: Validate,
+    ) -> Result<Self, SerializationError> {
+        let powers_of_g = Vec::<C::Affine>::deserialize_with_mode(reader, compress, validate)?;
+        Ok(ProverKey {
+            powers_of_g: Cow::Owned(powers_of_g),
+        })
+    }
+}
+
+impl<'a, C: CurveGroup> Valid for ProverKey<'a, C> {
+    fn check(&self) -> Result<(), SerializationError> {
+        for point in self.powers_of_g.iter() {
+            point.check()?;
+        }
+        Ok(())
+    }
 }
 
 #[derive(Debug, Clone, Default, Eq, PartialEq)]
@@ -100,7 +140,7 @@ where
             skip_first_zero_coeffs_and_convert_to_bigints(&polynomial);
         let commitment = <E::G1 as VariableBaseMSM>::msm_bigint(
             &params.powers_of_g[num_leading_zeros..],
-            &plain_coeffs,
+            &plain_coeffs[..],
         );
         Ok(commitment)
     }
@@ -161,7 +201,7 @@ where
             skip_first_zero_coeffs_and_convert_to_bigints(&witness_poly);
         let proof = <E::G1 as VariableBaseMSM>::msm_bigint(
             &params.powers_of_g[num_leading_zeros..],
-            &witness_coeffs,
+            &witness_coeffs[..],
         );
 
         Ok(Proof { eval, proof })

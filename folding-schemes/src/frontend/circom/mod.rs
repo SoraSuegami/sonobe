@@ -14,7 +14,7 @@ use ark_relations::r1cs::{ConstraintSynthesizer, ConstraintSystemRef, SynthesisE
 use ark_std::fmt::Debug;
 use num_bigint::BigInt;
 use std::fs::File;
-use std::io::{BufReader, Read, Seek};
+use std::io::{BufReader, Cursor, Read, Seek};
 use std::path::PathBuf;
 use std::rc::Rc;
 use std::{fmt, usize};
@@ -99,7 +99,6 @@ impl<F: PrimeField> CircomFCircuit<F> {
     }
 }
 
-#[cfg(not(target_arch = "wasm32"))]
 impl<F: PrimeField> FCircuit<F> for CircomFCircuit<F> {
     /// (r1cs_path, wasm_path, state_len, external_inputs_len)
     #[cfg(not(target_arch = "wasm32"))]
@@ -120,7 +119,7 @@ impl<F: PrimeField> FCircuit<F> for CircomFCircuit<F> {
         #[cfg(target_arch = "wasm32")]
         let circom_wrapper = {
             let (r1cs_raw, wasm_bytes, _, external_inputs_len) = params;
-            let r1cs_reader = BufReader::new(r1cs_raw.as_slice());
+            let r1cs_reader = Cursor::new(r1cs_raw);
             CircomWrapper::new(r1cs_reader, &wasm_bytes)?
         };
 

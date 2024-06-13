@@ -3,38 +3,49 @@ name = "folding-wasm-prover"
 version = "0.1.0"
 edition = "2021"
 
+[lib]
+crate-type = ["cdylib"]
+
+
 [dependencies]
-# ark-ec = "0.4.0"
-# ark-ff = "0.4.0"
-# ark-poly = "^0.4.0"
-# ark-std = "0.4.0"
-# ark-crypto-primitives = { version = "^0.4.0", default-features = false, features = [
-#     "r1cs",
-#     "sponge",
-#     "crh",
-# ] }
-# ark-grumpkin = { version = "0.4.0" }
-# ark-poly-commit = "^0.4.0"
-# ark-relations = { version = "^0.4.0", default-features = false }
-# ark-r1cs-std = { version = "0.4.0", default-features = false } # this is patched at the workspace level
-# ark-snark = { version = "^0.4.0" }
-# ark-serialize = "^0.4.0"
-# # ark-circom = { git = "https://github.com/arnaucube/circom-compat" }
-# thiserror = "1.0"
-# rayon = "1.7.0"
-# num-bigint = "0.4"
-# num-integer = "0.1"
-# color-eyre = "=0.6.2"
-# ark-bn254 = { version = "0.4.0" }
-# ark-groth16 = "0.4.0"
-# # tmp imports for espresso's sumcheck
-# espresso_subroutines = { git = "https://github.com/EspressoSystems/hyperplonk", package = "subroutines" }
+ark-ec = "0.4.0"
+ark-ff = "0.4.0"
+ark-poly = "^0.4.0"
+ark-std = "0.4.0"
+ark-crypto-primitives = { version = "^0.4.0", default-features = false, features = [
+    "r1cs",
+    "sponge",
+    "crh",
+] }
+ark-grumpkin = { version = "0.4.0" }
+ark-poly-commit = "^0.4.0"
+ark-relations = { version = "^0.4.0", default-features = false }
+ark-r1cs-std = { version = "0.4.0", default-features = false } # this is patched at the workspace level
+ark-snark = { version = "^0.4.0" }
+ark-serialize = "^0.4.0"
+# ark-circom = { git = "https://github.com/arnaucube/circom-compat" }
+thiserror = "1.0"
+rayon = "1.7.0"
+num-bigint = "0.4"
+num-integer = "0.1"
+color-eyre = "=0.6.2"
+ark-bn254 = { version = "0.4.0" }
+ark-groth16 = "0.4.0"
+# tmp imports for espresso's sumcheck
+espresso_subroutines = { git = "https://github.com/EspressoSystems/hyperplonk", package = "subroutines" }
 
-# getrandom = { version = "0.2", features = ["js"] }
+getrandom = { version = "0.2", features = ["js"] }
 # # ark-circom = { git = "https://github.com/SoraSuegami/circom-compat.git" }
-# folding-schemes = { path = "../folding-schemes" }
+folding-schemes = { path = "../folding-schemes" }
 
-# [target.'cfg(target_arch = "wasm32")'.dependencies]
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen = "0.2.92"
+
+[features]
+default = ["parallel"]
+
+parallel = ["ark-std/parallel", "ark-ff/parallel", "ark-poly/parallel"]
+
 # ark-circom-wasm = { package = "ark-circom", git = "https://github.com/arnaucube//circom-compat", default-features = false, features = [
 #     "circom-2",
 #     "wasm",

@@ -1,4 +1,5 @@
 use ark_ec::CurveGroup;
+use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::fmt::Debug;
 use ark_std::rand::RngCore;
 
@@ -12,8 +13,8 @@ pub mod pedersen;
 /// CommitmentScheme defines the vector commitment scheme trait. Where `H` indicates if to use the
 /// commitment in hiding mode or not.
 pub trait CommitmentScheme<C: CurveGroup, const H: bool = false>: Clone + Debug {
-    type ProverParams: Clone + Debug;
-    type VerifierParams: Clone + Debug;
+    type ProverParams: Clone + Debug + CanonicalSerialize + CanonicalDeserialize;
+    type VerifierParams: Clone + Debug + CanonicalSerialize + CanonicalDeserialize;
     type Proof: Clone + Debug;
     type ProverChallenge: Clone + Debug;
     type Challenge: Clone + Debug;

@@ -29,15 +29,15 @@ where
     CS1: CommitmentScheme<C1, ProverChallenge = C1::ScalarField, Challenge = C1::ScalarField>,
     S: SNARK<C1::ScalarField>,
 {
-    snark_proof: S::Proof,
-    kzg_proofs: [CS1::Proof; 2],
+    pub snark_proof: S::Proof,
+    pub kzg_proofs: [CS1::Proof; 2],
     // cmT and r are values for the last fold, U_{i+1}=NIFS.V(r, U_i, u_i, cmT), and they are
     // checked in-circuit
-    cmT: C1,
-    r: C1::ScalarField,
+    pub cmT: C1,
+    pub r: C1::ScalarField,
     // the KZG challenges are provided by the prover, but in-circuit they are checked to match
     // the in-circuit computed computed ones.
-    kzg_challenges: [C1::ScalarField; 2],
+    pub kzg_challenges: [C1::ScalarField; 2],
 }
 
 /// Onchain Decider, for ethereum use cases
@@ -256,7 +256,7 @@ pub fn prepare_calldata(
     .concat())
 }
 
-fn point_to_eth_format<C: AffineRepr>(p: C) -> Result<Vec<u8>, Error>
+pub fn point_to_eth_format<C: AffineRepr>(p: C) -> Result<Vec<u8>, Error>
 where
     C::BaseField: PrimeField,
 {
@@ -266,7 +266,7 @@ where
 
     Ok([x.into_bigint().to_bytes_be(), y.into_bigint().to_bytes_be()].concat())
 }
-fn point2_to_eth_format(p: ark_bn254::G2Affine) -> Result<Vec<u8>, Error> {
+pub fn point2_to_eth_format(p: ark_bn254::G2Affine) -> Result<Vec<u8>, Error> {
     let zero_point = (&ark_bn254::Fq2::zero(), &ark_bn254::Fq2::zero());
     let (x, y) = p.xy().unwrap_or(zero_point);
 

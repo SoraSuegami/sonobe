@@ -1,5 +1,5 @@
 [package]
-name = "solidity-verifiers-cli"
+name = "sonobe-cli"
 version = "0.1.0"
 edition = "2021"
 
@@ -10,29 +10,41 @@ ark-poly = "0.4"
 ark-std = "0.4"
 ark-groth16 = "0.4"
 askama = { version = "0.12.0", features = ["config"], default-features = false }
-ark-bn254 = "0.4.0"
+ark-bn254 = { version = "0.4.0", features = ["r1cs"] }
 ark-poly-commit = "0.4.0"
 solidity-verifiers = { path = "../solidity-verifiers" }
+folding-schemes = { path = "../folding-schemes" }
 itertools = "0.12.1"
 ark-serialize = "0.4.1"
 clap = { version = "4.4", features = ["derive", "string"] }
 clap-verbosity-flag = "2.1"
 log = "0.4"
 env_logger = "0.10"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+ark-crypto-primitives = { version = "^0.4.0", default-features = false, features = [
+    "r1cs",
+    "sponge",
+    "crh",
+
+] }
+ark-grumpkin = { version = "0.4.0", features = ["r1cs"] }
+
 
 [dev-dependencies]
 revm = "3.5.0"
-tracing = { version = "0.1", default-features = false, features = [ "attributes" ] }
+tracing = { version = "0.1", default-features = false, features = [
+    "attributes",
+] }
 tracing-subscriber = { version = "0.2" }
 
 [features]
 default = ["parallel"]
 
-parallel = [ 
-    "ark-std/parallel", 
-    "ark-ff/parallel",  
-    "ark-poly/parallel", 
-    ]
-
-
-
+parallel = [
+    "ark-std/parallel",
+    "ark-ff/parallel",
+    "ark-ec/parallel",
+    "ark-poly/parallel",
+    "ark-crypto-primitives/parallel",
+]

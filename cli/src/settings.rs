@@ -1,5 +1,6 @@
 use ark_serialize::SerializationError;
 use clap::{Parser, ValueEnum};
+use serde::{Deserialize, Serialize};
 use solidity_verifiers::{
     Groth16VerifierKey, KZG10VerifierKey, NovaCycleFoldVerifierKey, ProtocolVerifierKey,
 };
@@ -9,6 +10,18 @@ fn get_default_out_path() -> PathBuf {
     let mut path = env::current_dir().unwrap();
     path.push("verifier.sol");
     path
+}
+
+#[derive(Debug, Copy, Clone, ValueEnum)]
+pub(crate) enum Subcommand {
+    GenVerifier,
+    GenParams,
+}
+
+impl Display for Subcommand {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self)
+    }
 }
 
 #[derive(Debug, Copy, Clone, ValueEnum)]
@@ -44,6 +57,14 @@ impl Protocol {
             .render_as_template(pragma)),
         }
     }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CircomConfig {
+    pub r1cs_path: PathBuf,
+    pub wasm_path: PathBuf,
+    pub state_len: usize,
+    pub external_inputs_len: usize,
 }
 
 const ABOUT: &str = "A Command-Line Interface (CLI) tool to generate the Solidity smart contracts that verify proofs of Zero Knowledge cryptographic protocols.
@@ -95,6 +116,9 @@ pub(crate) struct Cli {
     #[command(flatten)]
     pub verbosity: clap_verbosity_flag::Verbosity,
 
+    #[arg(short = 'c', long)]
+    pub command: Subcommand,
+
     /// Selects the protocol for which we want to generate the Solidity Verifier contract.
     #[arg(short = 'p', long, value_enum, rename_all = "lower")]
     pub protocol: Protocol,
@@ -105,9 +129,12 @@ pub(crate) struct Cli {
 
     #[arg(short = 'k', long)]
     /// Sets the input path for the file containing the verifier key required by the protocol chosen such that the verification contract can be generated.
-    pub protocol_vk: PathBuf,
+    pub protocol_vk: Option<PathBuf>,
 
     /// Selects the Solidity compiler version to be set in the Solidity Verifier contract artifact.
     #[arg(long, default_value=None)]
     pub pragma: Option<String>,
+
+    #[arg(long)]
+    pub circom_config: Option<PathBuf>,
 }

@@ -7,6 +7,7 @@ use ark_groth16::{Groth16, ProvingKey as G16ProvingKey, VerifyingKey as G16Verif
 use ark_grumpkin::{constraints::GVar as GVar2, Projective as G2};
 use ark_poly_commit::kzg10::VerifierKey as KZGVerifierKey;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
+use console_error_panic_hook;
 use folding_schemes::{
     commitment::{
         kzg::{ProverKey as KZGProverKey, KZG},
@@ -130,6 +131,11 @@ impl NovaProofJson {
             kzg_proof,
         }
     }
+}
+
+#[wasm_bindgen]
+pub fn init_panic_hook() {
+    console_error_panic_hook::set_once();
 }
 
 #[wasm_bindgen]

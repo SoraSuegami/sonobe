@@ -11,3 +11,7 @@ solidity-verifiers/generated
 examples/*.sol
 examples/*.calldata
 examples/*.inputs
+
+wasm-prover/node_modules/*
+wasm-prover/coverage
+wasm-prover/tests/test_data

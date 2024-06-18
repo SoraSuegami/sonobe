@@ -30,7 +30,7 @@ pub trait FCircuit<F: PrimeField>: Clone + Debug {
         // this method uses self, so that each FCircuit implementation (and different frontends)
         // can hold a state if needed to store data to compute the next state.
         &self,
-        i: u64,
+        i: usize,
         z_i: Vec<F>,
         external_inputs: Vec<F>, // inputs that are not part of the state
     ) -> Result<Vec<F>, Error>;
@@ -41,7 +41,7 @@ pub trait FCircuit<F: PrimeField>: Clone + Debug {
         // can hold a state if needed to store data to generate the constraints.
         &self,
         cs: ConstraintSystemRef<F>,
-        i: u64,
+        i: usize,
         z_i: Vec<FpVar<F>>,
         external_inputs: Vec<FpVar<F>>, // inputs that are not part of the state
     ) -> Result<Vec<FpVar<F>>, SynthesisError>;
@@ -78,7 +78,7 @@ pub mod tests {
         }
         fn step_native(
             &self,
-            _i: u64,
+            _i: usize,
             z_i: Vec<F>,
             _external_inputs: Vec<F>,
         ) -> Result<Vec<F>, Error> {
@@ -87,7 +87,7 @@ pub mod tests {
         fn generate_step_constraints(
             &self,
             cs: ConstraintSystemRef<F>,
-            _i: u64,
+            _i: usize,
             z_i: Vec<FpVar<F>>,
             _external_inputs: Vec<FpVar<F>>,
         ) -> Result<Vec<FpVar<F>>, SynthesisError> {
@@ -122,7 +122,7 @@ pub mod tests {
         }
         fn step_native(
             &self,
-            _i: u64,
+            _i: usize,
             z_i: Vec<F>,
             _external_inputs: Vec<F>,
         ) -> Result<Vec<F>, Error> {
@@ -135,7 +135,7 @@ pub mod tests {
         fn generate_step_constraints(
             &self,
             cs: ConstraintSystemRef<F>,
-            _i: u64,
+            _i: usize,
             z_i: Vec<FpVar<F>>,
             _external_inputs: Vec<FpVar<F>>,
         ) -> Result<Vec<FpVar<F>>, SynthesisError> {

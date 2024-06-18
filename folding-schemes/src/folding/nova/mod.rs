@@ -367,13 +367,23 @@ where
         if self.i > C1::ScalarField::from_le_bytes_mod_order(&usize::MAX.to_le_bytes()) {
             return Err(Error::MaxStep);
         }
-        let mut i_bytes: [u8; 8] = [0; 8];
-        i_bytes.copy_from_slice(&self.i.into_bigint().to_bytes_le()[..8]);
-        let i_u64: u64 = u64::from_le_bytes(i_bytes);
+
+        #[cfg(target_pointer_width = "64")]
+        let i_usize: usize = {
+            let mut i_bytes: [u8; 8] = [0; 8];
+            i_bytes.copy_from_slice(&self.i.into_bigint().to_bytes_le()[..8]);
+            usize::from_le_bytes(i_bytes)
+        };
+        #[cfg(target_pointer_width = "32")]
+        let i_usize: usize = {
+            let mut i_bytes: [u8; 4] = [0; 4];
+            i_bytes.copy_from_slice(&self.i.into_bigint().to_bytes_le()[..4]);
+            usize::from_le_bytes(i_bytes)
+        };
 
         let z_i1 = self
             .F
-            .step_native(i_u64, self.z_i.clone(), external_inputs.clone())?;
+            .step_native(i_usize, self.z_i.clone(), external_inputs.clone())?;
 
         // compute T and cmT for AugmentedFCircuit
         let (T, cmT) = self.compute_cmT()?;
@@ -413,7 +423,7 @@ where
                 _gc2: PhantomData,
                 poseidon_config: self.poseidon_config.clone(),
                 i: Some(C1::ScalarField::zero()), // = i=0
-                i_u64: Some(0),
+                i_usize: Some(0),
                 z_0: Some(self.z_0.clone()), // = z_i
                 z_i: Some(self.z_i.clone()),
                 external_inputs: Some(external_inputs.clone()),
@@ -486,7 +496,7 @@ where
                 _gc2: PhantomData,
                 poseidon_config: self.poseidon_config.clone(),
                 i: Some(self.i),
-                i_u64: Some(i_u64),
+                i_usize: Some(i_usize),
                 z_0: Some(self.z_0.clone()),
                 z_i: Some(self.z_i.clone()),
                 external_inputs: Some(external_inputs.clone()),

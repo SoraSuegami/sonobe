@@ -44,7 +44,12 @@ impl<F: PrimeField> FCircuit<F> for MultiInputsFCircuit<F> {
 
     /// computes the next state values in place, assigning z_{i+1} into z_i, and computing the new
     /// z_{i+1}
-    fn step_native(&self, _i: u64, z_i: Vec<F>, _external_inputs: Vec<F>) -> Result<Vec<F>, Error> {
+    fn step_native(
+        &self,
+        _i: usize,
+        z_i: Vec<F>,
+        _external_inputs: Vec<F>,
+    ) -> Result<Vec<F>, Error> {
         let a = z_i[0] + F::from(4_u32);
         let b = z_i[1] + F::from(40_u32);
         let c = z_i[2] * F::from(4_u32);
@@ -58,7 +63,7 @@ impl<F: PrimeField> FCircuit<F> for MultiInputsFCircuit<F> {
     fn generate_step_constraints(
         &self,
         cs: ConstraintSystemRef<F>,
-        _i: u64,
+        _i: usize,
         z_i: Vec<FpVar<F>>,
         _external_inputs: Vec<FpVar<F>>,
     ) -> Result<Vec<FpVar<F>>, SynthesisError> {

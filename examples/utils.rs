@@ -64,7 +64,7 @@ pub(crate) fn init_nova_ivc_params<FC: FCircuit<Fr>>(
 
 /// Initializes Nova parameters and DeciderEth parameters. Only for test purposes.
 #[allow(clippy::type_complexity)]
-pub(crate) fn init_ivc_and_decider_params<FC: FCircuit<Fr>>(
+pub fn init_ivc_and_decider_params<FC: FCircuit<Fr>>(
     f_circuit: FC,
 ) -> (
     ProverParams<G1, G2, KZG<'static, Bn254>, Pedersen<G2>>,

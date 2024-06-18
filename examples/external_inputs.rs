@@ -93,7 +93,12 @@ where
 
     /// computes the next state value for the step of F for the given z_i and external_inputs
     /// z_{i+1}
-    fn step_native(&self, _i: u64, z_i: Vec<F>, external_inputs: Vec<F>) -> Result<Vec<F>, Error> {
+    fn step_native(
+        &self,
+        _i: usize,
+        z_i: Vec<F>,
+        external_inputs: Vec<F>,
+    ) -> Result<Vec<F>, Error> {
         let hash_input: [F; 2] = [z_i[0], external_inputs[0]];
         let h = CRH::<F>::evaluate(&self.poseidon_config, hash_input).unwrap();
         Ok(vec![h])
@@ -104,7 +109,7 @@ where
     fn generate_step_constraints(
         &self,
         cs: ConstraintSystemRef<F>,
-        _i: u64,
+        _i: usize,
         z_i: Vec<FpVar<F>>,
         external_inputs: Vec<FpVar<F>>,
     ) -> Result<Vec<FpVar<F>>, SynthesisError> {

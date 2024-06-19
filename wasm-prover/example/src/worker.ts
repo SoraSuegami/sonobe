@@ -34,6 +34,27 @@ async function fetchUint8Array(path: string): Promise<Uint8Array> {
     return new Uint8Array(buffer);
 }
 
+async function fetchPkChunks(pkPath: string): Promise<Uint8Array[] | undefined> {
+    const response = await fetch(pkPath);
+    if (response.body == null) {
+        return;
+    }
+    const chunks: Uint8Array[] = [];
+    let maxSize = 0;
+    const reader = response.body.getReader();
+
+    while (true) {
+        const { done, value } = await reader.read();
+        if (done) {
+            break;
+        }
+        chunks.push(value);
+        maxSize += value.byteLength;
+    }
+    console.log(maxSize);
+
+    return chunks;
+}
 
 export async function fullProve(
     r1cs: string,
@@ -49,8 +70,15 @@ export async function fullProve(
         const r1csBytes = await fetchUint8Array(r1cs);
         const wasmBytes = await fetchUint8Array(wasm);
         const csParamsBytes = await fetchUint8Array(csParams);
+        console.log(`csParams size: ${csParamsBytes.length}`);
         const cfCsParamsBytes = await fetchUint8Array(cfCsParams);
-        const g16PkBytes = await fetchUint8Array(g16Pk);
+        console.log(`cfCsParams size: ${cfCsParamsBytes.length}`);
+        // const g16PkBytes = await fetchUint8Array(g16Pk);
+        const g16PkChunks = await fetchPkChunks(g16Pk);
+        if (g16PkChunks === undefined) {
+            throw new Error("g16PkChunks is undefined");
+        }
+        console.log(`g16Pk size: ${g16PkChunks.reduce((acc, chunk) => acc + chunk.length, 0)}`);
         const multiThreads = await initMultiThreads();
         const start = performance.now();
         const proof = multiThreads.full_prove(
@@ -58,7 +86,8 @@ export async function fullProve(
             wasmBytes,
             csParamsBytes,
             cfCsParamsBytes,
-            g16PkBytes,
+            g16PkChunks,
+            // g16PkBytes,
             initState,
             externalInputs,
             nSteps

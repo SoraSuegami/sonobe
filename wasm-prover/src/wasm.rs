@@ -29,11 +29,17 @@ use folding_schemes::{
 use hex;
 use js_sys;
 use js_sys::Array as JsArray;
+use js_sys::Uint8Array;
 use rand;
 use serde::{Deserialize, Serialize};
 use serde_wasm_bindgen;
+use std::io::BufReader;
+use std::io::Read;
 use std::str::FromStr;
 use wasm_bindgen::prelude::*;
+use web_sys::console;
+
+pub use wasm_bindgen_rayon::init_thread_pool;
 
 type NOVA = Nova<G1, GVar, G2, GVar2, CircomFCircuit<Fr>, KZG<'static, Bn254>, Pedersen<G2>>;
 pub type DECIDERETH_FCircuit = DeciderEth<
@@ -144,33 +150,47 @@ pub fn full_prove(
     wasm_bytes: Vec<u8>,
     cs_params: Vec<u8>,
     cf_cs_params: Vec<u8>,
-    g16_pk: Vec<u8>,
+    g16_pk_chunks: JsArray,
+    // g16_pk: Vec<u8>,
     init_state: Vec<String>,
     external_inputs: Vec<String>,
     n_steps: usize,
 ) -> JsValue {
+    console::log_1(&"0".into());
     assert!(external_inputs.len() % n_steps == 0);
+    console::log_1(&"1".into());
     let external_input_len = external_inputs.len() / n_steps;
+    console::log_1(&"2".into());
     let f_circuit =
         CircomFCircuit::<Fr>::new((r1cs_raw, wasm_bytes, init_state.len(), external_input_len))
             .unwrap();
-    let cs_params = KZGProverKey::<G1>::deserialize_compressed(&cs_params[..])
+    console::log_1(&"3".into());
+    let cs_params = KZGProverKey::<G1>::deserialize_compressed(BufReader::new(&cs_params[..]))
         .expect("Failed to read cs_params");
-    let cf_cs_params = PedersenParams::<G2>::deserialize_compressed(&cf_cs_params[..])
-        .expect("Failed to read cf_cs_params");
+    console::log_1(&"4".into());
+    let cf_cs_params =
+        PedersenParams::<G2>::deserialize_compressed(BufReader::new(&cf_cs_params[..]))
+            .expect("Failed to read cf_cs_params");
+    console::log_1(&"5".into());
     let poseidon_config = poseidon_canonical_config::<Fr>();
+    console::log_1(&"6".into());
     let fs_prover_params = ProverParams::<G1, G2, KZG<Bn254>, Pedersen<G2>> {
         poseidon_config,
         cs_params,
         cf_cs_params,
     };
-    let g16_pk =
-        G16ProvingKey::<Bn254>::deserialize_compressed(&g16_pk[..]).expect("Failed to read g16_pk");
+    console::log_1(&"7".into());
+    let g16_pk_reader = JsArrayReader::new(g16_pk_chunks);
+    let g16_pk = G16ProvingKey::<Bn254>::deserialize_compressed(BufReader::new(g16_pk_reader))
+        .expect("Failed to read g16_pk");
+    console::log_1(&"8".into());
     let init_state = init_state
         .iter()
         .map(|s| Fr::from_str(s).unwrap())
         .collect::<Vec<Fr>>();
+    console::log_1(&"9".into());
     let mut nova = NOVA::init(&fs_prover_params, f_circuit, init_state).unwrap();
+    console::log_1(&"10".into());
     for external_input in external_inputs.chunks(external_input_len) {
         let external_input = external_input
             .iter()
@@ -178,6 +198,7 @@ pub fn full_prove(
             .collect::<Vec<Fr>>();
         nova.prove_step(external_input).unwrap();
     }
+    console::log_1(&"11".into());
     let rng = rand::rngs::OsRng;
     let proof = DECIDERETH_FCircuit::prove(
         (g16_pk, fs_prover_params.cs_params.clone()),
@@ -185,8 +206,11 @@ pub fn full_prove(
         nova.clone(),
     )
     .unwrap();
+    console::log_1(&"12".into());
     let proof_json = NovaProofJson::new(nova.i, &nova.z_0, &nova.z_i, &nova.U_i, &nova.u_i, &proof);
+    console::log_1(&"13".into());
     serde_wasm_bindgen::to_value(&proof_json).unwrap()
+    // JsValue::null()
 }
 
 fn fr_to_hex(fr: &Fr) -> String {
@@ -213,4 +237,43 @@ fn point2_to_hexes(point: ark_bn254::G2Affine) -> [[String; 2]; 2] {
             "0x".to_string() + hex::encode(&bytes[96..128]).as_str(),
         ],
     ]
+}
+
+struct JsArrayReader {
+    array: JsArray,
+    consumed: (usize, usize),
+}
+impl Read for JsArrayReader {
+    fn read(&mut self, buf: &mut [u8]) -> Result<usize, std::io::Error> {
+        let n = buf.len();
+        if n == 0 {
+            return Ok(0);
+        }
+        let mut remaining = n;
+        while (remaining > 0) {
+            if self.consumed.0 >= self.array.length() as usize {
+                return Ok(n - remaining);
+            }
+            let chunk = Uint8Array::new(&self.array.get(self.consumed.0 as u32)).to_vec();
+            let read_bytes = std::cmp::min(chunk.len() - self.consumed.1, remaining);
+            buf[n - remaining..n - remaining + read_bytes]
+                .copy_from_slice(&chunk[self.consumed.1..self.consumed.1 + read_bytes]);
+            remaining -= read_bytes;
+            self.consumed.1 += read_bytes;
+            if self.consumed.1 >= chunk.len() {
+                self.consumed.0 += 1;
+                self.consumed.1 = 0;
+            }
+        }
+        Ok(n - remaining)
+    }
+}
+
+impl JsArrayReader {
+    fn new(array: JsArray) -> Self {
+        Self {
+            array,
+            consumed: (0, 0),
+        }
+    }
 }

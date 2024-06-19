@@ -1,0 +1,1 @@
+RUSTUP_TOOLCHAIN=nightly wasm-pack build --release --target web -- ./  -Z  build-std=panic_abort,std

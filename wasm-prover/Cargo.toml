@@ -25,7 +25,7 @@ ark-snark = { version = "^0.4.0" }
 ark-serialize = "^0.4.0"
 # ark-circom = { git = "https://github.com/arnaucube/circom-compat" }
 thiserror = "1.0"
-rayon = "1.7.0"
+rayon = "1.8.0"
 num-bigint = "0.4"
 num-integer = "0.1"
 color-eyre = "=0.6.2"
@@ -35,8 +35,8 @@ ark-groth16 = "0.4.0"
 espresso_subroutines = { git = "https://github.com/EspressoSystems/hyperplonk", package = "subroutines" }
 
 getrandom = { version = "0.2", features = ["js"] }
-# # ark-circom = { git = "https://github.com/SoraSuegami/circom-compat.git" }
 folding-schemes = { path = "../folding-schemes" }
+# # ark-circom = { git = "https://github.com/SoraSuegami/circom-compat.git" }
 rand = "0.8.5"
 hex = "0.4.3"
 
@@ -45,17 +45,27 @@ serde_json = "1.0"
 wasm-bindgen = "0.2.92"
 js-sys = "0.3.68"
 serde = { version = "1.0", features = ["derive"] }
-serde-wasm-bindgen = "0.4"
+serde-wasm-bindgen = "0.6.5"
 console_error_panic_hook = "0.1.6"
+wasm-bindgen-rayon = "1.2"
+web-sys = { version = "0.3", features = ["console"] }
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3.0"
+wasm-bindgen = "0.2"
 
 
 [features]
 default = ["parallel", "ark-bn254/r1cs", "ark-grumpkin/r1cs"]
 
-parallel = ["ark-std/parallel", "ark-ff/parallel", "ark-poly/parallel"]
+parallel = [
+    "ark-std/parallel",
+    "ark-ff/parallel",
+    "ark-ec/parallel",
+    "ark-poly/parallel",
+    "ark-crypto-primitives/parallel",
+    "ark-r1cs-std/parallel",
+]
 
 # ark-circom-wasm = { package = "ark-circom", git = "https://github.com/arnaucube//circom-compat", default-features = false, features = [
 #     "circom-2",

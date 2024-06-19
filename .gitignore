@@ -15,3 +15,7 @@ examples/*.inputs
 wasm-prover/node_modules/*
 wasm-prover/coverage
 wasm-prover/tests/test_data
+wasm-prover/example/node_modules/*
+wasm-prover/example/public/*.bin
+wasm-prover/example/public/*.r1cs
+wasm-prover/example/public/*.wasm

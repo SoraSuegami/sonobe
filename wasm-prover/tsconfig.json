@@ -7,7 +7,7 @@
             "esnext"
         ],
         "allowJs": true,
-        "module": "CommonJS",
+        "module": "es2020",
         "skipLibCheck": true,
         "esModuleInterop": true,
         "allowSyntheticDefaultImports": true,
